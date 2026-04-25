@@ -33,8 +33,6 @@ const listingSchema = new mongoose.Schema({
         required: false
     }
 
-
-
 }, {timestamps: true});
 
 export default mongoose.model("Listing", listingSchema);
