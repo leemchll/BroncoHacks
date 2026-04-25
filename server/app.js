@@ -7,6 +7,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import listingRoutes from "./routes/listingRoutes.js";
+import userRoutes from "./routes/userRoutes.js"; // ✅ MUST EXIST
 
 dotenv.config();
 
@@ -14,15 +15,21 @@ const app = express();
 
 /**
  * Middleware
- * - cors: allows frontend to talk to backend
- * - express.json: allows us to read JSON from requests
  */
 app.use(cors());
 app.use(express.json());
 
 /**
+ * Test route
+ */
+app.get("/", (req, res) => {
+  res.send("Backend is working");
+});
+
+/**
  * Routes
  */
 app.use("/api/listings", listingRoutes);
+app.use("/api/users", userRoutes); // ✅ THIS LINE FIXES YOUR ERROR
 
 export default app;
