@@ -1,14 +1,15 @@
-import express from "express";
-import cors from "cors";
+/**
+ * @file index.js
+ * @description Entry point of the server. Starts the app.
+ */
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+import app from "./app.js";
 
-app.get("/", (req, res) => {
-  res.send("API running");
-});
+const PORT = process.env.PORT || 5001;
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+/**
+ * Start server
+ */
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
