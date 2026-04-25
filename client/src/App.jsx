@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ListingCard from './components/ListingCard';
@@ -8,7 +8,7 @@ import EmptyState from './components/EmptyState';
 import { mockListings, CATEGORIES } from './data/listings';
 
 export default function App() {
-  const [listings, setListings] = useState(mockListings);
+  const [listings, setListings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
@@ -21,6 +21,21 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+
+  /**
+   * Fetch listings from the backend when the app loads
+   */
+  useEffect(() => {
+    fetch('http://localhost:5001/api/listings')
+      .then((res) => res.json())
+      .then((data) => {
+        setListings(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        console.error('Error fetching listings:', error);
+        setListings(mockListings);
+      });
+  }, []);
 
   const handleLogin = () => {
     if (isLoggedIn) {
