@@ -1,6 +1,6 @@
 /**
  * @file userRoutes.js
- * @description Defines routes for user-related API endpoints
+ * @description Defines API routes for user-related actions (register, login)
  */
 
 import express from "express";
@@ -11,12 +11,14 @@ const router = express.Router();
 /**
  * @route POST /api/users/register
  * @description Register a new user
+ * @access Public
  */
 router.post("/register", registerUser);
 
 /**
  * @route POST /api/users/login
  * @description Log in a user
+ * @access Public
  */
 router.post("/login", loginUser);
 
