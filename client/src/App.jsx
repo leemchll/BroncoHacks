@@ -42,7 +42,7 @@ export default function App() {
       setIsLoggedIn(false);
       setUserName('');
     } else {
-      const name = window.prompt('Enter your name to log in (demo):') || 'Student User';
+      const name = fetch('/api/users/login')
       setIsLoggedIn(true);
       setUserName(name);
     }
@@ -73,7 +73,7 @@ export default function App() {
   };
 
   const handleCreateListing = (newListing) => {
-    setListings(prev => [newListing, ...prev]);
+    fetch('/api/listings', { method: 'POST', ... })
   };
 
   const filteredListings = useMemo(() => {
