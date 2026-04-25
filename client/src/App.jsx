@@ -6,7 +6,7 @@ import ListingModal from './components/ListingModal';
 import CreateListingModal from './components/CreateListingModal';
 import EmptyState from './components/EmptyState';
 import { mockListings, CATEGORIES } from './data/listings';
-import LoginModal from './components/LoginModal';
+import LoginModal from './components/LoginModal.jsx';
 
 export default function App() {
   const [listings, setListings] = useState([]);
@@ -188,7 +188,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onCreateListing={() => setShowCreateModal(true)}
-        onLogin={handleLogin}
+        onLogin={handleLoginClick}
         isLoggedIn={isLoggedIn}
         userName={userName}
       />
@@ -363,6 +363,13 @@ export default function App() {
           onSubmit={handleCreateListing}
           isLoggedIn={isLoggedIn}
           currentUser={userName || 'Anonymous'}
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          onSubmit={handleLoginSubmit}
         />
       )}
     </div>
