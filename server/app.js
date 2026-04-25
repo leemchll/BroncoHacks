@@ -7,7 +7,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import listingRoutes from "./routes/listingRoutes.js";
-import userRoutes from "./routes/userRoutes.js"; // ✅ MUST EXIST
+import userRoutes from "./routes/userRoutes.js"; 
 
 dotenv.config();
 
@@ -30,6 +30,6 @@ app.get("/", (req, res) => {
  * Routes
  */
 app.use("/api/listings", listingRoutes);
-app.use("/api/users", userRoutes); // ✅ THIS LINE FIXES YOUR ERROR
+app.use("/api/users", userRoutes); 
 
 export default app;

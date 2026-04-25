@@ -6,6 +6,7 @@ import ListingModal from './components/ListingModal';
 import CreateListingModal from './components/CreateListingModal';
 import EmptyState from './components/EmptyState';
 import { mockListings, CATEGORIES } from './data/listings';
+import LoginModal from './components/LoginModal';
 
 export default function App() {
   const [listings, setListings] = useState([]);
@@ -21,6 +22,7 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   /**
    * Fetch listings from the backend when the app loads
@@ -37,14 +39,47 @@ export default function App() {
       });
   }, []);
 
-  const handleLogin = () => {
+  /**
+   * @function handleLoginClick
+   * @description Opens login modal or logs user out if already logged in
+   */
+  const handleLoginClick = () => {
     if (isLoggedIn) {
       setIsLoggedIn(false);
       setUserName('');
-    } else {
-      const name = fetch('/api/users/login')
+      return;
+    }
+
+    setShowLoginModal(true);
+  };
+
+  /**
+   * @function handleLoginSubmit
+   * @description Sends login request to backend and updates UI on success
+   */
+  const handleLoginSubmit = async ({ email, password }) => {
+    try {
+      const res = await fetch('http://localhost:5001/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || 'Login failed');
+        return;
+      }
+
       setIsLoggedIn(true);
-      setUserName(name);
+      setUserName(data.user?.email || 'Student User');
+      setShowLoginModal(false);
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Something went wrong while logging in.');
     }
   };
 
@@ -72,9 +107,27 @@ export default function App() {
     );
   };
 
-  const handleCreateListing = (newListing) => {
-    fetch('/api/listings', { method: 'POST', ... })
-  };
+    /**
+   * @function handleCreateListing
+   * @description Sends new listing to backend and updates UI
+   */
+    const handleCreateListing = async (newListing) => {
+      try {
+        const res = await fetch('http://localhost:5001/api/listings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newListing),
+        });
+  
+        const data = await res.json();
+  
+        setListings((prev) => [data, ...prev]);
+      } catch (error) {
+        console.error('Error creating listing:', error);
+      }
+    };
 
   const filteredListings = useMemo(() => {
     let result = [...listings];

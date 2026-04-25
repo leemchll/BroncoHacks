@@ -48,7 +48,6 @@ export const registerUser = (req, res) => {
 export const loginUser = (req, res) => {
     const { email, password } = req.body;
   
-    // basic validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Please provide email and password",
