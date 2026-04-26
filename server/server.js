@@ -8,7 +8,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import listingRoutes from "./routes/listingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import connectDB from "./config/db.js";
+import connectDB from "./config/db.js"
 
 dotenv.config();
 const app = express();
@@ -16,7 +16,11 @@ const app = express();
 /**
  * Middleware
  */
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:80',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 
 /**

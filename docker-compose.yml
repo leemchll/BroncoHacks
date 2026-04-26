@@ -11,10 +11,19 @@ services:
     build: ./server
     container_name: server
     ports:
-      - "3000:5000"
+      - "3000:5001"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/mydb
+      - MONGO_URI=mongodb://127.0.0.1:27017/UniMartDb
     depends_on:
       - mongodb
+
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
 volumes:
   mongo-data:

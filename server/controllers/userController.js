@@ -23,8 +23,6 @@ export const registerUser = (req, res) => {
         message: "Password must be at least 6 characters",
       });
     }
-
-    
   
     res.status(201).json({
       message: "User registered successfully",
