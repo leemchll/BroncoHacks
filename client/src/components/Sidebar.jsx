@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { CATEGORIES, CONDITIONS, SORT_OPTIONS } from '../data/listings';
 
 export default function Sidebar({
   selectedCategory,
   onCategoryChange,
+  selectedSubcategory,
+  onSubcategoryChange,
   priceRange,
   onPriceChange,
   selectedConditions,
@@ -14,8 +17,42 @@ export default function Sidebar({
   isOpen,
   onClose,
 }) {
+  const [expandedCategories, setExpandedCategories] = useState(() =>
+    selectedCategory !== 'all' ? new Set([selectedCategory]) : new Set()
+  );
+
+  useEffect(() => {
+    if (selectedCategory !== 'all') {
+      setExpandedCategories((prev) => new Set([...prev, selectedCategory]));
+    }
+  }, [selectedCategory]);
+
+  const toggleExpand = (catId, e) => {
+    e.stopPropagation();
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
+
+  const handleCategoryClick = (catId) => {
+    onCategoryChange(catId);
+    onSubcategoryChange('');
+    if (catId !== 'all') {
+      setExpandedCategories((prev) => new Set([...prev, catId]));
+    }
+  };
+
+  const handleSubcategoryClick = (catId, subId) => {
+    onCategoryChange(catId);
+    onSubcategoryChange(subId);
+  };
+
   const hasActiveFilters =
     selectedCategory !== 'all' ||
+    selectedSubcategory !== '' ||
     priceRange.min !== '' ||
     priceRange.max !== '' ||
     selectedConditions.length > 0;
@@ -46,7 +83,6 @@ export default function Sidebar({
           value={sortBy}
           onChange={(e) => onSortChange(e.target.value)}
           className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2"
-          style={{ focusRingColor: '#7FB37A' }}
         >
           {SORT_OPTIONS.map(opt => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -57,22 +93,81 @@ export default function Sidebar({
       {/* Categories */}
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Category</h3>
-        <div className="space-y-1">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => onCategoryChange(cat.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
-                selectedCategory === cat.id
-                  ? 'font-semibold text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              style={selectedCategory === cat.id ? { backgroundColor: '#7FB37A' } : {}}
-            >
-              <span className="text-base leading-none">{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
+        <div className="space-y-0.5">
+          {/* All Categories */}
+          <button
+            onClick={() => handleCategoryClick('all')}
+            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+              selectedCategory === 'all'
+                ? 'font-semibold text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            style={selectedCategory === 'all' ? { backgroundColor: '#7FB37A' } : {}}
+          >
+            All Categories
+          </button>
+
+          {/* Main categories with subcategories */}
+          {CATEGORIES.filter(cat => cat.id !== 'all').map(cat => {
+            const isCatActive = selectedCategory === cat.id;
+            const isExpanded = expandedCategories.has(cat.id);
+
+            return (
+              <div key={cat.id}>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleCategoryClick(cat.id)}
+                    className={`flex-1 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isCatActive && !selectedSubcategory
+                        ? 'font-semibold text-white'
+                        : isCatActive
+                        ? 'font-medium text-gray-800 bg-gray-100'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                    style={isCatActive && !selectedSubcategory ? { backgroundColor: '#7FB37A' } : {}}
+                  >
+                    {cat.label}
+                  </button>
+                  <button
+                    onClick={(e) => toggleExpand(cat.id, e)}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+                    aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                  >
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {isExpanded && cat.subcategories.length > 0 && (
+                  <div className="ml-3 mt-0.5 mb-1 space-y-0.5 border-l-2 border-gray-100 pl-2">
+                    {cat.subcategories.map(sub => {
+                      const isSubActive = isCatActive && selectedSubcategory === sub.id;
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => handleSubcategoryClick(cat.id, sub.id)}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
+                            isSubActive
+                              ? 'font-semibold text-white'
+                              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                          }`}
+                          style={isSubActive ? { backgroundColor: '#7FB37A' } : {}}
+                        >
+                          {sub.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -89,7 +184,6 @@ export default function Sidebar({
               onChange={(e) => onPriceChange({ ...priceRange, min: e.target.value })}
               min="0"
               className="w-full pl-6 pr-2 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1"
-              style={{ focusRingColor: '#7FB37A' }}
             />
           </div>
           <span className="text-gray-400 text-sm">–</span>

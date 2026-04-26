@@ -5,6 +5,7 @@ const INITIAL_FORM = {
   title: '',
   price: '',
   category: 'textbooks',
+  subcategory: '',
   condition: 'Good',
   description: '',
   location: '',
@@ -26,14 +27,18 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
     };
   }, [onClose]);
 
+  const selectedCatData = CATEGORIES.find(c => c.id === form.category);
+  const availableSubcategories = selectedCatData?.subcategories || [];
+
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
-    if (form.title.trim().length < 5) errs.title = 'Title must be at least 5 characters';
+    else if (form.title.trim().length < 5) errs.title = 'Title must be at least 5 characters';
     if (form.price === '') errs.price = 'Price is required';
-    if (Number(form.price) < 0) errs.price = 'Price cannot be negative';
+    else if (Number(form.price) < 0) errs.price = 'Price cannot be negative';
+    if (!form.subcategory) errs.subcategory = 'Subcategory is required';
     if (!form.description.trim()) errs.description = 'Description is required';
-    if (form.description.trim().length < 20) errs.description = 'Description must be at least 20 characters';
+    else if (form.description.trim().length < 20) errs.description = 'Description must be at least 20 characters';
     if (!form.location.trim()) errs.location = 'Location is required';
     return errs;
   };
@@ -50,6 +55,7 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
       title: form.title.trim(),
       price: Number(form.price),
       category: form.category,
+      subcategory: form.subcategory,
       condition: form.condition,
       description: form.description.trim(),
       location: form.location.trim(),
@@ -67,6 +73,11 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
   const set = (field) => (e) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleCategoryChange = (e) => {
+    setForm(prev => ({ ...prev, category: e.target.value, subcategory: '' }));
+    setErrors(prev => ({ ...prev, category: undefined, subcategory: undefined }));
   };
 
   if (submitted) {
@@ -128,27 +139,46 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
             {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
           </div>
 
-          {/* Category + Condition row */}
+          {/* Category (full width) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={form.category}
+              onChange={handleCategoryChange}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300 bg-white"
+            >
+              {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory + Condition row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-red-400">*</span>
+                Subcategory <span className="text-red-400">*</span>
               </label>
               <select
-                value={form.category}
-                onChange={set('category')}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300 bg-white"
+                value={form.subcategory}
+                onChange={set('subcategory')}
+                className={`w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300 bg-white ${
+                  errors.subcategory ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                }`}
               >
-                {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>
+                <option value="">Select subcategory</option>
+                {availableSubcategories.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.label}</option>
                 ))}
               </select>
+              {errors.subcategory && <p className="text-xs text-red-500 mt-1">{errors.subcategory}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Condition <span className="text-red-400">*</span>
               </label>
-
               <select
                 value={form.condition}
                 onChange={set('condition')}
