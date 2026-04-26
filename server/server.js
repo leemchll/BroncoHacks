@@ -22,12 +22,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    process.env.CLIENT_URL,
+].filter(Boolean);
+
 const io = new Server(httpServer, {
-    cors: { origin: '*', methods: ['GET', 'POST', 'PATCH', 'DELETE'] },
+    cors: { origin: allowedOrigins, methods: ['GET', 'POST', 'PATCH', 'DELETE'] },
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
