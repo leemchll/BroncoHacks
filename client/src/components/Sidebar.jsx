@@ -16,6 +16,9 @@ export default function Sidebar({
   listingCount,
   isOpen,
   onClose,
+  isLoggedIn,
+  unreadCount,
+  onOpenMessages,
 }) {
   const [expandedCategories, setExpandedCategories] = useState(() =>
     selectedCategory !== 'all' ? new Set([selectedCategory]) : new Set()
@@ -59,6 +62,27 @@ export default function Sidebar({
 
   const SidebarContent = () => (
     <div className="space-y-6">
+      {/* Messages Tab */}
+      {isLoggedIn && (
+        <button
+          onClick={onOpenMessages}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          Messages
+          {unreadCount > 0 && (
+            <span
+              className="ml-auto text-xs font-bold text-white px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: '#5C9657' }}
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
+
       {/* Filter Header */}
       <div className="flex items-center justify-between">
         <div>
