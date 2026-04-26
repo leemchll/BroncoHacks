@@ -26,7 +26,7 @@ export const registerUser = async (req, res) => {
 
         res.status(201).json({
             message: "User registered successfully",
-            user: { username: newUser.username, name: newUser.name, email: newUser.email },
+            user: { id: newUser._id.toString(), username: newUser.username, name: newUser.name, email: newUser.email },
         });
     } catch (err) {
         console.error("registerUser error:", err);
@@ -55,7 +55,7 @@ export const loginUser = async (req, res) => {
 
         res.status(200).json({
             message: "Login successful",
-            user: { username: user.username, name: user.name, email: user.email },
+            user: { id: user._id.toString(), username: user.username, name: user.name, email: user.email },
         });
     } catch (err) {
         console.error("loginUser error:", err);

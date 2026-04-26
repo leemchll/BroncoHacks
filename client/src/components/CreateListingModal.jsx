@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CATEGORIES, CONDITIONS } from '../data/listings';
 
 const INITIAL_FORM = {
@@ -9,13 +9,17 @@ const INITIAL_FORM = {
   condition: 'Good',
   description: '',
   location: '',
-  imageUrl: '',
 };
 
 export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, currentUser }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -30,6 +34,47 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
   const selectedCatData = CATEGORIES.find(c => c.id === form.category);
   const availableSubcategories = selectedCatData?.subcategories || [];
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+  const handleFile = (file) => {
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setImageError('Only jpg, jpeg, png, and webp images are allowed');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Image must be under 5 MB');
+      return;
+    }
+    setImageError('');
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleFileInput = (e) => {
+    handleFile(e.target.files[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => setIsDragging(false);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
@@ -43,30 +88,38 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isLoggedIn || !currentUser) {
+      setErrors({ general: 'You must be logged in to create a listing' });
+      return;
+    }
+
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
-    const newListing = {
-      id: Date.now(),
-      title: form.title.trim(),
-      price: Number(form.price),
-      category: form.category,
-      subcategory: form.subcategory,
-      condition: form.condition,
-      description: form.description.trim(),
-      location: form.location.trim(),
-      image: form.imageUrl.trim() || `https://picsum.photos/seed/${Date.now()}/400/300`,
-      images: [form.imageUrl.trim() || `https://picsum.photos/seed/${Date.now()}/400/300`],
-      seller: currentUser || 'You',
-      sellerAvatar: (currentUser || 'YO').slice(0, 2).toUpperCase(),
-      timePosted: new Date().toISOString(),
-      saved: false,
-    };
-    onSubmit(newListing);
+
+    const formData = new FormData();
+    formData.append('title', form.title.trim());
+    formData.append('price', form.price);
+    formData.append('category', form.category);
+    formData.append('subcategory', form.subcategory);
+    formData.append('condition', form.condition);
+    formData.append('description', form.description.trim());
+    formData.append('location', form.location.trim());
+    formData.append('seller', currentUser.name || currentUser.username);
+    formData.append('sellerAvatar', (currentUser.username || 'U').slice(0, 2).toUpperCase());
+    formData.append('sellerId', currentUser.id);
+    formData.append('sellerUsername', currentUser.username);
+
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    await onSubmit(formData);
     setSubmitted(true);
   };
 
@@ -122,6 +175,74 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {/* Not logged in warning */}
+          {(!isLoggedIn || !currentUser) && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              You must be logged in to create a listing
+            </div>
+          )}
+
+          {errors.general && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{errors.general}</p>
+          )}
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Photo <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+
+            {imagePreview ? (
+              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+                <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover" />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-3 py-1.5">
+                  <p className="text-xs text-white truncate">{imageFile?.name}</p>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+                  isDragging
+                    ? 'border-green-400 bg-green-50'
+                    : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium" style={{ color: '#5C9657' }}>Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP up to 5 MB</p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleFileInput}
+              className="hidden"
+            />
+            {imageError && <p className="text-xs text-red-500 mt-1">{imageError}</p>}
+          </div>
+
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -139,7 +260,7 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
             {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
           </div>
 
-          {/* Category (full width) */}
+          {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category <span className="text-red-400">*</span>
@@ -254,21 +375,6 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
             {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
           </div>
 
-          {/* Image URL (optional) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Image URL <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="url"
-              value={form.imageUrl}
-              onChange={set('imageUrl')}
-              placeholder="https://example.com/image.jpg"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
-            />
-            <p className="text-xs text-gray-400 mt-1">Leave blank to use a placeholder image</p>
-          </div>
-
           {/* Submit */}
           <div className="flex gap-3 pt-2">
             <button
@@ -280,9 +386,10 @@ export default function CreateListingModal({ onClose, onSubmit, isLoggedIn, curr
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-colors"
+              disabled={!isLoggedIn || !currentUser}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#5C9657' }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4a7a45'}
+              onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#4a7a45'; }}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = '#5C9657'}
             >
               Post Listing

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CATEGORIES } from '../data/listings';
 import { formatDistanceToNow } from '../utils/formatTime';
+import messageIcon from '../../imports/messageicon.png';
 
 const conditionColors = {
   'New': 'bg-blue-100 text-blue-700',
@@ -10,10 +11,8 @@ const conditionColors = {
   'Poor': 'bg-red-100 text-red-700',
 };
 
-export default function ListingModal({ listing, onClose, onToggleSave, isSaved }) {
+export default function ListingModal({ listing, onClose, onToggleSave, isSaved, currentUser, isLoggedIn, onOpenChat }) {
   const [activeImage, setActiveImage] = useState(0);
-  const [messageSent, setMessageSent] = useState(false);
-  const [messageText, setMessageText] = useState('');
 
   const category = CATEGORIES.find(c => c.id === listing.category);
 
@@ -27,14 +26,19 @@ export default function ListingModal({ listing, onClose, onToggleSave, isSaved }
     };
   }, [onClose]);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!messageText.trim()) return;
-    setMessageSent(true);
-    setMessageText('');
-  };
+  const images = listing.images?.length ? listing.images : (listing.image ? [listing.image] : []);
 
-  const images = listing.images?.length ? listing.images : [listing.image];
+  const isSeller =
+    currentUser &&
+    (currentUser.username === listing.sellerUsername ||
+      currentUser.id === listing.sellerId ||
+      currentUser.username === listing.seller);
+
+  const isRealListing = !!listing.sellerId;
+
+  const handleMessageClick = () => {
+    if (onOpenChat) onOpenChat(listing);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -57,14 +61,20 @@ export default function ListingModal({ listing, onClose, onToggleSave, isSaved }
           {/* Images */}
           <div className="md:rounded-l-2xl overflow-hidden bg-gray-100">
             <div className="aspect-square relative overflow-hidden">
-              <img
-                src={images[activeImage]}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = `https://placehold.co/400x400/e5e7eb/9ca3af?text=${encodeURIComponent(listing.category)}`;
-                }}
-              />
+              {images.length > 0 ? (
+                <img
+                  src={images[activeImage]}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = `https://placehold.co/400x400/e5e7eb/9ca3af?text=${encodeURIComponent(listing.category || 'Item')}`;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">
+                  📦
+                </div>
+              )}
               {listing.price === 0 && (
                 <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500 text-white">FREE</span>
               )}
@@ -148,7 +158,6 @@ export default function ListingModal({ listing, onClose, onToggleSave, isSaved }
             {/* Seller */}
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0" style={{ backgroundColor: '#7FB37A' }}>
-
                 {listing.sellerAvatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -164,35 +173,38 @@ export default function ListingModal({ listing, onClose, onToggleSave, isSaved }
               </div>
             </div>
 
-            {/* Message / Contact */}
+            {/* Message Seller */}
             <div className="mt-auto">
-              {messageSent ? (
-                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl text-sm text-green-700 font-medium">
+              {isSeller ? (
+                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm text-gray-500">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Message sent! The seller will respond soon.
+                  This is your listing
+                </div>
+              ) : !isLoggedIn ? (
+                <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Please log in to message the seller
+                </div>
+              ) : !isRealListing ? (
+                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm text-gray-400">
+                  <img src={messageIcon} alt="" className="w-4 h-4 opacity-40" />
+                  Chat is only available for live listings
                 </div>
               ) : (
-                <form onSubmit={handleSendMessage} className="space-y-2">
-                  <textarea
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder={`Hi ${listing.seller.split(' ')[0]}, is this still available?`}
-                    rows={2}
-                    className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-green-300 placeholder-gray-400"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!messageText.trim()}
-                    className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#5C9657' }}
-                    onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = '#4a7a45'; }}
-                    onMouseLeave={e => e.currentTarget.style.backgroundColor = '#5C9657'}
-                  >
-                    Send Message
-                  </button>
-                </form>
+                <button
+                  onClick={handleMessageClick}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                  style={{ backgroundColor: '#5C9657' }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4a7a45'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#5C9657'}
+                >
+                  <img src={messageIcon} alt="Message" className="w-5 h-5 object-contain brightness-0 invert" />
+                  Message Seller
+                </button>
               )}
             </div>
           </div>
