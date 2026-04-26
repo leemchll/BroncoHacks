@@ -14,23 +14,26 @@ export default function ListingCard({ listing, onSelect, onToggleSave, isSaved }
 
   return (
     <div
-      className="listing-card bg-white rounded-xl border border-gray-200 overflow-hidden cursor-pointer group"
+      className="listing-card bg-white rounded-xl border border-gray-200 cursor-pointer group relative"
       onClick={() => onSelect(listing)}
     >
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-          onError={(e) => {
-            e.target.src = `https://placehold.co/400x300/e5e7eb/9ca3af?text=${encodeURIComponent(listing.category)}`;
-          }}
-        />
+      {/* Image — no overflow-hidden here so the save button can bleed below */}
+      <div className="relative aspect-[4/3] bg-gray-100 rounded-t-xl">
+        {/* Inner wrapper clips the hover scale animation */}
+        <div className="absolute inset-0 overflow-hidden rounded-t-xl">
+          <img
+            src={listing.image}
+            alt={listing.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            onError={(e) => {
+              e.target.src = `https://placehold.co/400x300/e5e7eb/9ca3af?text=${encodeURIComponent(listing.category)}`;
+            }}
+          />
+        </div>
 
         {/* Price badge */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2 z-10">
           {listing.price === 0 ? (
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-500 text-white shadow-sm">
               FREE
@@ -42,10 +45,10 @@ export default function ListingCard({ listing, onSelect, onToggleSave, isSaved }
           )}
         </div>
 
-        {/* Save button */}
+        {/* Save button — sits at the image/content boundary, bottom-left */}
         <button
-          className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all ${
-            isSaved ? 'bg-red-500 text-white' : 'bg-white/90 text-gray-400 hover:text-red-500'
+          className={`absolute left-3 bottom-[-18px] z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 border-white shadow-md transition-all ${
+            isSaved ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:text-red-500'
           }`}
           onClick={(e) => {
             e.stopPropagation();
@@ -59,9 +62,9 @@ export default function ListingCard({ listing, onSelect, onToggleSave, isSaved }
         </button>
       </div>
 
-      {/* Content */}
-      <div className="p-3">
-        {/* Category tag */}
+      {/* Content — pt-6 makes room for the overlapping save button */}
+      <div className="p-3 pt-6">
+        {/* Category tag + condition */}
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-gray-400">
             {category?.label}
@@ -76,12 +79,12 @@ export default function ListingCard({ listing, onSelect, onToggleSave, isSaved }
           {listing.title}
         </h3>
 
-        {/* Price (large) */}
+        {/* Price */}
         <p className="text-lg font-bold mb-2" style={{ color: listing.price === 0 ? '#5C9657' : '#1F2937' }}>
           {listing.price === 0 ? 'Free' : `$${listing.price}`}
         </p>
 
-        {/* Meta info */}
+        {/* Seller + time */}
         <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-2 mt-auto">
           <div className="flex items-center gap-1.5 min-w-0">
             <div className="w-5 h-5 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0" style={{ backgroundColor: '#7FB37A' }}>
