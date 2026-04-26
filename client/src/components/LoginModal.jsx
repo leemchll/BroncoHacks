@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 
 const INITIAL_FORM = {
-  email: '',
+  username: '',
   password: '',
 };
 
-export default function LoginModal({ onClose, onSubmit }) {
+export default function LoginModal({ onClose, onSubmit, errorMessage }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
 
@@ -27,7 +27,7 @@ export default function LoginModal({ onClose, onSubmit }) {
   const validate = () => {
     const errs = {};
 
-    if (!form.email.trim()) errs.email = 'Email is required';
+    if (!form.username.trim()) errs.username = 'Username is required';
     if (!form.password.trim()) errs.password = 'Password is required';
 
     return errs;
@@ -43,7 +43,7 @@ export default function LoginModal({ onClose, onSubmit }) {
     }
 
     await onSubmit({
-      email: form.email.trim(),
+      username: form.username.trim(),
       password: form.password,
     });
   };
@@ -83,18 +83,18 @@ export default function LoginModal({ onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-red-400">*</span>
+              Username <span className="text-red-400">*</span>
             </label>
             <input
-              type="email"
-              value={form.email}
-              onChange={setField('email')}
-              placeholder="you@example.com"
+              type="text"
+              value={form.username}
+              onChange={setField('username')}
+              placeholder="Enter your username"
               className={`w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors ${
-                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200'
               }`}
             />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+            {errors.username && <p className="text-xs text-red-500 mt-1">{errors.username}</p>}
           </div>
 
           <div>
@@ -112,6 +112,12 @@ export default function LoginModal({ onClose, onSubmit }) {
             />
             {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
+
+          {errorMessage && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              {errorMessage}
+            </p>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button

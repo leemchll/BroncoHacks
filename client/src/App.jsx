@@ -27,6 +27,8 @@ export default function App() {
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
 
   useEffect(() => {
     fetch('http://localhost:5001/api/listings')
@@ -46,28 +48,34 @@ export default function App() {
       setUserName('');
       return;
     }
+    setLoginError('');
     setShowLoginModal(true);
   };
 
   const handleRegisterClick = () => {
+    setRegisterError('');
     setShowRegisterModal(true);
   };
 
-  const handleLoginSubmit = async ({ email, password }) => {
+  const handleLoginSubmit = async ({ username, password }) => {
     try {
       const res = await fetch('http://localhost:5001/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.message || 'Login failed'); return; }
+      if (!res.ok) {
+        setLoginError(data.message || 'Login failed');
+        return;
+      }
+      setLoginError('');
       setIsLoggedIn(true);
-      setUserName(data.user?.email || 'Student User');
+      setUserName(data.user?.username || 'Student User');
       setShowLoginModal(false);
     } catch (error) {
       console.error('Login error:', error);
-      alert('Something went wrong while logging in.');
+      setLoginError('Something went wrong while logging in.');
     }
   };
 
@@ -79,13 +87,17 @@ export default function App() {
         body: JSON.stringify({ username, name, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.message || 'Registration failed'); return; }
+      if (!res.ok) {
+        setRegisterError(data.message || 'Registration failed');
+        return;
+      }
+      setRegisterError('');
       setIsLoggedIn(true);
-      setUserName(data.user?.username || data.user?.email || 'Student User');
+      setUserName(data.user?.username || 'Student User');
       setShowRegisterModal(false);
     } catch (error) {
       console.error('Register error:', error);
-      alert('Something went wrong while registering.');
+      setRegisterError('Something went wrong while registering.');
     }
   };
 
@@ -471,15 +483,17 @@ export default function App() {
 
       {showLoginModal && (
         <LoginModal
-          onClose={() => setShowLoginModal(false)}
+          onClose={() => { setShowLoginModal(false); setLoginError(''); }}
           onSubmit={handleLoginSubmit}
+          errorMessage={loginError}
         />
       )}
 
       {showRegisterModal && (
         <RegisterModal
-          onClose={() => setShowRegisterModal(false)}
+          onClose={() => { setShowRegisterModal(false); setRegisterError(''); }}
           onSubmit={handleRegisterSubmit}
+          errorMessage={registerError}
         />
       )}
     </div>

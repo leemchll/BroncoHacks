@@ -34,7 +34,7 @@ app.use("/api/users", userRoutes);
 
 const PORT = process.env.PORT || 5001;
 
-connectDB;
+connectDB();
 
 /**
  * Start server

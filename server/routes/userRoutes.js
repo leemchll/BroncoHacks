@@ -4,7 +4,7 @@
  */
 
 import express from "express";
-import { registerUser, loginUser } from "../controllers/userController.js";
+import { registerUser, loginUser, checkPassword } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -21,5 +21,7 @@ router.post("/register", registerUser);
  * @access Public
  */
 router.post("/login", loginUser);
+
+router.post("/check-password", checkPassword);
 
 export default router;

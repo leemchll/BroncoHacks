@@ -11,7 +11,7 @@ const INITIAL_FORM = {
  * @file RegisterModal.jsx
  * @description Modal for registering a new user account
  */
-export default function RegisterModal({ onClose, onSubmit }) {
+export default function RegisterModal({ onClose, onSubmit, errorMessage }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
 
@@ -177,6 +177,12 @@ export default function RegisterModal({ onClose, onSubmit }) {
             />
             {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
+
+          {errorMessage && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              {errorMessage}
+            </p>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button
