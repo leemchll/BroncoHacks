@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import icon from '../imports/icon.png';
+import { API_URL } from './config';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ListingCard from './components/ListingCard';
@@ -14,7 +15,6 @@ import ChatModal from './components/ChatModal.jsx';
 import MessagesPanel from './components/MessagesPanel.jsx';
 import MyListings from './components/MyListings.jsx';
 
-const SOCKET_URL = 'http://localhost:5001';
 
 export default function App() {
   const [listings, setListings] = useState([]);
@@ -47,7 +47,7 @@ export default function App() {
   const notifSocketRef = useRef(null);
 
   useEffect(() => {
-    fetch('http://localhost:5001/api/listings')
+    fetch(`${API_URL}/api/listings`)
       .then((res) => res.json())
       .then((data) => setListings(Array.isArray(data) ? data : []))
       .catch(() => setListings(mockListings));
@@ -65,13 +65,13 @@ export default function App() {
     }
 
     // Fetch initial unread count
-    fetch(`http://localhost:5001/api/messages/unread/${currentUser.id}`)
+    fetch(`${API_URL}/api/messages/unread/${currentUser.id}`)
       .then(r => r.json())
       .then(d => setUnreadCount(d.count || 0))
       .catch(() => {});
 
     // Connect notification socket
-    const socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+    const socket = io(API_URL, { transports: ['websocket', 'polling'] });
     notifSocketRef.current = socket;
 
     socket.on('connect', () => {
@@ -105,7 +105,7 @@ export default function App() {
 
   const handleLoginSubmit = async ({ username, password }) => {
     try {
-      const res = await fetch('http://localhost:5001/api/users/login', {
+      const res = await fetch(`${API_URL}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -123,7 +123,7 @@ export default function App() {
 
   const handleRegisterSubmit = async ({ username, name, email, password }) => {
     try {
-      const res = await fetch('http://localhost:5001/api/users/register', {
+      const res = await fetch(`${API_URL}/api/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, name, email, password }),
@@ -166,7 +166,7 @@ export default function App() {
 
   const handleCreateListing = async (formData) => {
     try {
-      const res = await fetch('http://localhost:5001/api/listings', { method: 'POST', body: formData });
+      const res = await fetch(`${API_URL}/api/listings`, { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) { console.error('Error creating listing:', data.message); return; }
       setListings((prev) => [data, ...prev]);
@@ -200,7 +200,7 @@ export default function App() {
   const handleDeleteListing = async (listingId) => {
     try {
       const res = await fetch(
-        `http://localhost:5001/api/listings/${listingId}?userId=${currentUser.id}`,
+        `${API_URL}/api/listings/${listingId}?userId=${currentUser.id}`,
         { method: 'DELETE' }
       );
       if (res.ok) {

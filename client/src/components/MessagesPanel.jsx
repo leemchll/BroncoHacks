@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import messageIcon from '../../imports/messageicon.png';
+import { API_URL } from '../config';
 
 export default function MessagesPanel({ currentUser, onClose, onOpenChat }) {
   const [conversations, setConversations] = useState([]);
@@ -12,7 +13,7 @@ export default function MessagesPanel({ currentUser, onClose, onOpenChat }) {
 
   useEffect(() => {
     if (!currentUser?.id) return;
-    fetch(`http://localhost:5001/api/conversations/user/${currentUser.id}`)
+    fetch(`${API_URL}/api/conversations/user/${currentUser.id}`)
       .then(r => r.json())
       .then(data => { setConversations(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

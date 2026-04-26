@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.production
+server/.env
+
+# Build output
+client/dist/
+
+# Uploaded files (use cloud storage in production)
+server/uploads/
+
+# OS / editor
+.DS_Store
+.vscode/
+*.swp

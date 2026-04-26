@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 export default function MyListings({ currentUser, onClose, onViewListing, onDeleteListing }) {
   const [listings, setListings] = useState([]);
@@ -12,7 +13,7 @@ export default function MyListings({ currentUser, onClose, onViewListing, onDele
 
   useEffect(() => {
     if (!currentUser?.id) return;
-    fetch(`http://localhost:5001/api/listings/user/${currentUser.id}`)
+    fetch(`${API_URL}/api/listings/user/${currentUser.id}`)
       .then(r => r.json())
       .then(data => { setListings(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

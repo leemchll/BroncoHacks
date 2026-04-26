@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import messageIcon from '../../imports/messageicon.png';
-
-const SOCKET_URL = 'http://localhost:5001';
+import { API_URL } from '../config';
 
 export default function ChatModal({ listing, currentUser, onClose, initialConversationId, explicitReceiverId, onMarkRead }) {
   const [messages, setMessages] = useState([]);
@@ -39,7 +38,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
         if (initialConversationId) {
           convId = initialConversationId;
         } else {
-          const convRes = await fetch('http://localhost:5001/api/conversations', {
+          const convRes = await fetch(`${API_URL}/api/conversations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -69,7 +68,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
         setConversationId(convId);
 
         // Load existing messages
-        const msgRes = await fetch(`http://localhost:5001/api/messages/${convId}`);
+        const msgRes = await fetch(`${API_URL}/api/messages/${convId}`);
         const msgs = await msgRes.json();
 
         if (cancelled) return;
@@ -78,7 +77,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
 
         // Mark messages as read
         try {
-          const readRes = await fetch(`http://localhost:5001/api/messages/read/${convId}`, {
+          const readRes = await fetch(`${API_URL}/api/messages/read/${convId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser.id }),
@@ -92,7 +91,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
         if (cancelled) return;
 
         // Connect Socket.IO
-        socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+        socket = io(API_URL, { transports: ['websocket', 'polling'] });
         socketRef.current = socket;
 
         socket.emit('joinConversation', convId);
