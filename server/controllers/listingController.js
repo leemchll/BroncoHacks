@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Listing from '../models/ListingModel.js';
 
-const BASE_URL = process.env.SERVER_URL || 'http://localhost:5001';
+const BASE_URL = (process.env.SERVER_URL || 'http://localhost:5001').replace(/\/$/, '');
 
 function formatListing(l) {
     const imageUrl = l.image

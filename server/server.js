@@ -24,7 +24,7 @@ const httpServer = createServer(app);
 
 const allowedOrigins = [
     'http://localhost:5173',
-    process.env.CLIENT_URL,
+    process.env.CLIENT_URL?.replace(/\/$/, ''),
 ].filter(Boolean);
 
 const io = new Server(httpServer, {
