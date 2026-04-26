@@ -2,10 +2,16 @@
   "name": "server",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "mongodb": "^7.2.0",
     "mongoose": "^9.5.0"
   }
 }
