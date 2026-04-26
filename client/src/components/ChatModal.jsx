@@ -25,6 +25,13 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
   }, [onClose]);
 
   useEffect(() => {
+    // cancelled flag guards against the React StrictMode double-invoke race:
+    // StrictMode fires cleanup before the async init resolves, so without this
+    // flag a stale socket from run-1 and a fresh socket from run-2 both join
+    // the room and both register receiveMessage listeners → every message fires twice.
+    let cancelled = false;
+    let socket = null;
+
     const init = async () => {
       try {
         let convId;
@@ -48,8 +55,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
 
           if (!convRes.ok) {
             const err = await convRes.json();
-            setError(err.message || 'Could not start conversation');
-            setLoading(false);
+            if (!cancelled) { setError(err.message || 'Could not start conversation'); setLoading(false); }
             return;
           }
 
@@ -57,11 +63,17 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
           convId = conv._id.toString();
         }
 
+        // Bail if cleanup already ran while we were awaiting
+        if (cancelled) return;
+
         setConversationId(convId);
 
         // Load existing messages
         const msgRes = await fetch(`http://localhost:5001/api/messages/${convId}`);
         const msgs = await msgRes.json();
+
+        if (cancelled) return;
+
         setMessages(Array.isArray(msgs) ? msgs : []);
 
         // Mark messages as read
@@ -71,33 +83,51 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: currentUser.id }),
           });
-          if (readRes.ok) {
+          if (readRes.ok && !cancelled) {
             const readData = await readRes.json();
             if (readData.markedRead > 0) onMarkRead?.(readData.markedRead);
           }
         } catch {}
 
-        // Connect Socket.IO
-        socketRef.current = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
-        socketRef.current.emit('joinConversation', convId);
+        if (cancelled) return;
 
-        socketRef.current.on('receiveMessage', (msg) => {
-          setMessages((prev) => [...prev, msg]);
+        // Connect Socket.IO
+        socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+        socketRef.current = socket;
+
+        socket.emit('joinConversation', convId);
+
+        // Clear any stale listeners before registering
+        socket.off('receiveMessage');
+        socket.on('receiveMessage', (msg) => {
+          setMessages((prev) => {
+            // Deduplicate by _id — guards against any edge-case double emit
+            const msgId = msg._id?.toString();
+            if (msgId && prev.some(m => m._id?.toString() === msgId)) return prev;
+            return [...prev, msg];
+          });
         });
 
         setLoading(false);
         setTimeout(() => inputRef.current?.focus(), 100);
       } catch (err) {
         console.error('Chat init error:', err);
-        setError('Failed to connect to chat. Is the server running?');
-        setLoading(false);
+        if (!cancelled) {
+          setError('Failed to connect to chat. Is the server running?');
+          setLoading(false);
+        }
       }
     };
 
     init();
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      cancelled = true;
+      if (socket) {
+        socket.off('receiveMessage');
+        socket.disconnect();
+      }
+      socketRef.current = null;
     };
   }, []);
 
@@ -109,6 +139,10 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
     e.preventDefault();
     if (!text.trim() || !conversationId || !socketRef.current) return;
 
+    // Send only through Socket.IO — the backend saves to MongoDB and emits
+    // receiveMessage back to the room (including the sender). We do NOT add
+    // the message locally here; we wait for the receiveMessage event so there
+    // is exactly one code-path that adds messages to state.
     socketRef.current.emit('sendMessage', {
       conversationId,
       listingId: listing.id?.toString() || listing._id?.toString(),
@@ -142,7 +176,7 @@ export default function ChatModal({ listing, currentUser, onClose, initialConver
             <p className="text-sm font-semibold text-gray-900 truncate">
               {listing.title}
             </p>
-            <p className="text-xs text-gray-400 truncate">Seller: {listing.seller}</p>
+            <p className="text-xs text-gray-400 truncate">Seller: {listing.seller || listing.sellerUsername}</p>
           </div>
           <button
             onClick={onClose}
