@@ -63,9 +63,8 @@ export default function ListingCard({ listing, onSelect, onToggleSave, isSaved }
       <div className="p-3">
         {/* Category tag */}
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-gray-400 flex items-center gap-1">
-            <span>{category?.icon}</span>
-            <span>{category?.label}</span>
+          <span className="text-xs text-gray-400">
+            {category?.label}
           </span>
           <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${conditionColors[listing.condition] || 'bg-gray-100 text-gray-600'}`}>
             {listing.condition}

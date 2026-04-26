@@ -17,10 +17,18 @@
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #F3F4F6;
   color: #1F2937;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, button {
+  font-family: 'Poppins', sans-serif;
+}
+
+.font-heading {
+  font-family: 'Poppins', sans-serif;
 }
 
 #root {

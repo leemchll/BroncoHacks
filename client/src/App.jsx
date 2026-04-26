@@ -9,14 +9,11 @@ import { mockListings, CATEGORIES } from './data/listings';
 import LoginModal from './components/LoginModal.jsx';
 import RegisterModal from './components/RegisterModal.jsx';
 
-/**
- * @file App.jsx
- * @description Main application component for Unimart
- */
 export default function App() {
   const [listings, setListings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedConditions, setSelectedConditions] = useState([]);
   const [sortBy, setSortBy] = useState('newest');
@@ -30,9 +27,6 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
 
-  /**
-   * Fetch listings from the backend when the app loads
-   */
   useEffect(() => {
     fetch('http://localhost:5001/api/listings')
       .then((res) => res.json())
@@ -45,49 +39,28 @@ export default function App() {
       });
   }, []);
 
-  /**
-   * @function handleLoginClick
-   * @description Opens login modal or logs user out if already logged in
-   */
   const handleLoginClick = () => {
     if (isLoggedIn) {
       setIsLoggedIn(false);
       setUserName('');
       return;
     }
-
     setShowLoginModal(true);
   };
 
-  /**
-   * @function handleRegisterClick
-   * @description Opens register modal
-   */
   const handleRegisterClick = () => {
     setShowRegisterModal(true);
   };
 
-  /**
-   * @function handleLoginSubmit
-   * @description Sends login request to backend and updates UI on success
-   */
   const handleLoginSubmit = async ({ email, password }) => {
     try {
       const res = await fetch('http://localhost:5001/api/users/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || 'Login failed');
-        return;
-      }
-
+      if (!res.ok) { alert(data.message || 'Login failed'); return; }
       setIsLoggedIn(true);
       setUserName(data.user?.email || 'Student User');
       setShowLoginModal(false);
@@ -97,27 +70,15 @@ export default function App() {
     }
   };
 
-  /**
-   * @function handleRegisterSubmit
-   * @description Sends register request to backend and updates UI on success
-   */
   const handleRegisterSubmit = async ({ username, name, email, password }) => {
     try {
       const res = await fetch('http://localhost:5001/api/users/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, name, email, password }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || 'Registration failed');
-        return;
-      }
-
+      if (!res.ok) { alert(data.message || 'Registration failed'); return; }
       setIsLoggedIn(true);
       setUserName(data.user?.username || data.user?.email || 'Student User');
       setShowRegisterModal(false);
@@ -127,10 +88,6 @@ export default function App() {
     }
   };
 
-  /**
-   * @function handleToggleSave
-   * @description Toggles saved state for a listing
-   */
   const handleToggleSave = (id) => {
     setSavedListings((prev) => {
       const next = new Set(prev);
@@ -140,43 +97,29 @@ export default function App() {
     });
   };
 
-  /**
-   * @function handleClearFilters
-   * @description Resets all active filters
-   */
   const handleClearFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
+    setSelectedSubcategory('');
     setPriceRange({ min: '', max: '' });
     setSelectedConditions([]);
     setSortBy('newest');
     setShowSavedOnly(false);
   };
 
-  /**
-   * @function handleConditionToggle
-   * @description Toggles a selected condition filter
-   */
   const handleConditionToggle = (cond) => {
     setSelectedConditions((prev) =>
       prev.includes(cond) ? prev.filter((c) => c !== cond) : [...prev, cond]
     );
   };
 
-  /**
-   * @function handleCreateListing
-   * @description Sends new listing to backend and updates UI
-   */
   const handleCreateListing = async (newListing) => {
     try {
       const res = await fetch('http://localhost:5001/api/listings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newListing),
       });
-
       const data = await res.json();
       setListings((prev) => [data, ...prev]);
     } catch (error) {
@@ -204,6 +147,10 @@ export default function App() {
 
     if (selectedCategory !== 'all') {
       result = result.filter((l) => l.category === selectedCategory);
+    }
+
+    if (selectedSubcategory) {
+      result = result.filter((l) => l.subcategory === selectedSubcategory);
     }
 
     if (priceRange.min !== '') {
@@ -240,6 +187,7 @@ export default function App() {
     listings,
     searchQuery,
     selectedCategory,
+    selectedSubcategory,
     priceRange,
     selectedConditions,
     sortBy,
@@ -250,8 +198,14 @@ export default function App() {
   const categoryLabel =
     CATEGORIES.find((c) => c.id === selectedCategory)?.label || 'All Categories';
 
+  const subcategoryLabel = (() => {
+    const cat = CATEGORIES.find((c) => c.id === selectedCategory);
+    return cat?.subcategories.find((s) => s.id === selectedSubcategory)?.label || '';
+  })();
+
   const hasActiveFilters =
     selectedCategory !== 'all' ||
+    selectedSubcategory !== '' ||
     priceRange.min !== '' ||
     priceRange.max !== '' ||
     selectedConditions.length > 0 ||
@@ -281,14 +235,16 @@ export default function App() {
               Buy, sell, and discover deals from students near you
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
-              {CATEGORIES.slice(1, 6).map((cat) => (
+              {CATEGORIES.slice(1).map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-sm font-medium transition-colors backdrop-blur-sm"
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setSelectedSubcategory('');
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-sm font-medium transition-colors backdrop-blur-sm"
                 >
-                  <span>{cat.icon}</span>
-                  <span>{cat.label}</span>
+                  {cat.label}
                 </button>
               ))}
             </div>
@@ -353,8 +309,26 @@ export default function App() {
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-white"
                 style={{ backgroundColor: '#7FB37A' }}
               >
-                {CATEGORIES.find((c) => c.id === selectedCategory)?.icon} {categoryLabel}
-                <button onClick={() => setSelectedCategory('all')} className="ml-1 hover:opacity-70">
+                {categoryLabel}
+                <button
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setSelectedSubcategory('');
+                  }}
+                  className="ml-1 hover:opacity-70"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+
+            {selectedSubcategory && (
+              <span
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-white"
+                style={{ backgroundColor: '#5C9657' }}
+              >
+                {subcategoryLabel}
+                <button onClick={() => setSelectedSubcategory('')} className="ml-1 hover:opacity-70">
                   ×
                 </button>
               </span>
@@ -411,6 +385,8 @@ export default function App() {
           <Sidebar
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
+            selectedSubcategory={selectedSubcategory}
+            onSubcategoryChange={setSelectedSubcategory}
             priceRange={priceRange}
             onPriceChange={setPriceRange}
             selectedConditions={selectedConditions}
