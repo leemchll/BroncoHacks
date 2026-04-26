@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import icon from '../imports/icon.png';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ListingCard from './components/ListingCard';
@@ -427,12 +428,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: '#7FB37A' }}
-              >
-                <span className="text-white font-bold text-xs">U</span>
-              </div>
+              <img src={icon} alt="Unimart" className="w-7 h-7 object-contain" />
               <span className="font-bold text-gray-700">
                 Uni<span style={{ color: '#5C9657' }}>mart</span>
               </span>
@@ -440,6 +436,12 @@ export default function App() {
               <span className="text-xs text-gray-400">Student Marketplace</span>
             </div>
             <p className="text-xs text-gray-400">© 2026 Unimart · Built for students, by students</p>
+            <p className="text-xs text-gray-400">
+              Icons made by{' '}
+              <a href="https://www.flaticon.com/authors/freepik" title="Freepik" className="underline hover:text-gray-600">Freepik</a>
+              {' '}from{' '}
+              <a href="https://www.flaticon.com/" title="Flaticon" className="underline hover:text-gray-600">www.flaticon.com</a>
+            </p>
             <div className="flex gap-4 text-xs text-gray-400">
               <a href="#" className="hover:text-gray-600 transition-colors">Safety Tips</a>
               <a href="#" className="hover:text-gray-600 transition-colors">Help</a>

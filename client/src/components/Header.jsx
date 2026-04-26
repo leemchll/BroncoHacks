@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import icon from '../../imports/icon.png';
 
 export default function Header({ searchQuery, onSearchChange, onCreateListing, onLogin, onRegister, isLoggedIn, userName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -9,9 +10,7 @@ export default function Header({ searchQuery, onSearchChange, onCreateListing, o
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#7FB37A' }}>
-            <span className="text-white font-bold text-sm">U</span>
-          </div>
+          <img src={icon} alt="Unimart" className="w-8 h-8 object-contain" />
           <span className="font-bold text-xl text-gray-900 hidden sm:block">
             Uni<span style={{ color: '#5C9657' }}>mart</span>
           </span>
