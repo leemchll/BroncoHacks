@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Header({ searchQuery, onSearchChange, onCreateListing, onLogin, isLoggedIn, userName }) {
+export default function Header({ searchQuery, onSearchChange, onCreateListing, onLogin, onRegister, isLoggedIn, userName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
@@ -68,10 +68,14 @@ export default function Header({ searchQuery, onSearchChange, onCreateListing, o
             <span className="hidden sm:inline">Create Listing</span>
             <span className="sm:hidden">List</span>
           </button>
+        </div>
 
-          {isLoggedIn ? (
+        {isLoggedIn ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: '#7FB37A' }}>
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                style={{ backgroundColor: '#7FB37A' }}
+              >
                 {userName?.slice(0, 2).toUpperCase()}
               </div>
               <button
@@ -82,14 +86,27 @@ export default function Header({ searchQuery, onSearchChange, onCreateListing, o
               </button>
             </div>
           ) : (
-            <button
+            <div className="flex items-center gap-2">
+              <button
               onClick={onLogin}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+              style={{ backgroundColor: '#5C9657' }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4a7a45')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5C9657')}
             >
               Log in
             </button>
+              <button
+                onClick={onRegister}
+                className="px-3 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+                style={{ backgroundColor: '#5C9657' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4a7a45')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5C9657')}
+              >
+                Register
+              </button>
+            </div>
           )}
-        </div>
       </div>
 
       {/* Mobile Search Bar */}
